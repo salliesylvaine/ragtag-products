@@ -22,4 +22,15 @@ exports.app.post("/test", (req, res) => {
     const amount = req.body.amount;
     res.status(200).send({ with_tax: amount * 7 });
 });
+const checkout_1 = require("./checkout");
+//Checkouts
+exports.app.post("/checkouts/", runAsync(async ({ body }, res) => {
+    res.send(await checkout_1.createStripeCheckoutSession(body.line_items));
+}));
+//catch async errors when awaiting promises
+function runAsync(callback) {
+    return (req, res, next) => {
+        callback(req, res, next).catch(next);
+    };
+}
 //# sourceMappingURL=api.js.map

@@ -33,4 +33,10 @@ function runAsync(callback) {
         callback(req, res, next).catch(next);
     };
 }
+const payments_1 = require("./payments");
+//Payment Intents API
+//Create a PaymentIntent
+exports.app.post("/payments", runAsync(async ({ body }, res) => {
+    res.send(await payments_1.createPaymentIntent(body.amount));
+}));
 //# sourceMappingURL=api.js.map

@@ -38,3 +38,15 @@ function runAsync(callback: Function) {
     callback(req, res, next).catch(next);
   };
 }
+
+import { createPaymentIntent } from "./payments";
+
+//Payment Intents API
+
+//Create a PaymentIntent
+app.post(
+  "/payments",
+  runAsync(async ({ body }: Request, res: Response) => {
+    res.send(await createPaymentIntent(body.amount));
+  })
+);

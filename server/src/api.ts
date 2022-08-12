@@ -15,6 +15,14 @@ import cors from "cors";
 
 app.use(cors({ origin: true }));
 
+// Sets rawBody for webhook handling
+//the reason we want a buffer is bc this is a signed request from stripe
+app.use(
+  express.json({
+    verify: (req, res, buffer) => (req["rawBody"] = buffer),
+  })
+);
+
 //testing the api
 app.post("/test", (req: Request, res: Response) => {
   const amount = req.body.amount;
@@ -40,6 +48,7 @@ function runAsync(callback: Function) {
 }
 
 import { createPaymentIntent } from "./payments";
+import { handleStripeWebhook } from "./webhooks";
 
 //Payment Intents API
 
@@ -50,3 +59,8 @@ app.post(
     res.send(await createPaymentIntent(body.amount));
   })
 );
+
+//Webhooks
+
+//Handle Webhooks
+app.post("/hooks", runAsync(handleStripeWebhook));

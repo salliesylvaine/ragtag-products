@@ -17,6 +17,11 @@ exports.app.use(express_1.default.json());
 //cors = Cross Origin Resource Sharing
 const cors_1 = __importDefault(require("cors"));
 exports.app.use(cors_1.default({ origin: true }));
+// Sets rawBody for webhook handling
+//the reason we want a buffer is bc this is a signed request from stripe
+exports.app.use(express_1.default.json({
+    verify: (req, res, buffer) => (req["rawBody"] = buffer),
+}));
 //testing the api
 exports.app.post("/test", (req, res) => {
     const amount = req.body.amount;
@@ -34,9 +39,13 @@ function runAsync(callback) {
     };
 }
 const payments_1 = require("./payments");
+const webhooks_1 = require("./webhooks");
 //Payment Intents API
 //Create a PaymentIntent
 exports.app.post("/payments", runAsync(async ({ body }, res) => {
     res.send(await payments_1.createPaymentIntent(body.amount));
 }));
+//Webhooks
+//Handle Webhooks
+exports.app.post("/hooks", runAsync(webhooks_1.handleStripeWebhook));
 //# sourceMappingURL=api.js.map

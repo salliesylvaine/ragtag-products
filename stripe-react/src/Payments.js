@@ -24,28 +24,28 @@ function Payments() {
       body: { amount: validAmount },
     });
     setPaymentIntent(pi);
+  };
 
-    //Handle the submission of card details
-    const handleSubmit = async (event) => {
-      event.preventDefault();
+  //Handle the submission of card details
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-      const cardElement = elements.getElement(CardElement);
+    const cardElement = elements.getElement(CardElement);
 
-      //Confirm Card Payment
-      const { paymentIntent: updatedPaymentIntent, error } =
-        await stripe.confirmedCardPayment(paymentIntent.client_secret, {
-          payment_method: { card: cardElement },
-          //tells stripe to take the credit card and apply it to the payment intent,
-          //which it will try to charge right away
-        });
-      if (error) {
-        console.error(error);
-        error.payment_intent && setPaymentIntent(error.payment_intent);
-      } else {
-        setPaymentIntent(updatedPaymentIntent);
-      }
-    };
-  
+    //Confirm Card Payment
+    const { paymentIntent: updatedPaymentIntent, error } =
+      await stripe.confirmedCardPayment(paymentIntent.client_secret, {
+        payment_method: { card: cardElement },
+        //tells stripe to take the credit card and apply it to the payment intent,
+        //which it will try to charge right away
+      });
+    if (error) {
+      console.error(error);
+      error.payment_intent && setPaymentIntent(error.payment_intent);
+    } else {
+      setPaymentIntent(updatedPaymentIntent);
+    }
+  };
 
   return (
     <>

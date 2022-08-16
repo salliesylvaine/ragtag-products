@@ -50,6 +50,7 @@ function runAsync(callback: Function) {
 import { createPaymentIntent } from "./payments";
 import { handleStripeWebhook } from "./webhooks";
 import { auth } from "firebase-admin";
+import { createSetupIntent, listPaymentMethods } from "./customers";
 
 //Payment Intents API
 
@@ -98,3 +99,25 @@ function validateUser(req: Request) {
   }
   return user;
 }
+
+//Customer and Setup Intents
+
+//Save a card on the customer record with a SetupIntent
+app.post(
+  "/wallet",
+  runAsync(async (req: Request, res: Response) => {
+    const user = validateUser(req);
+    const setupIntent = await createSetupIntent(user.uid);
+    res.send(setupIntent);
+  })
+);
+
+//Retrieve all cards attached to a customer
+app.get(
+  "/wallet",
+  runAsync(async (req: Request, res: Response) => {
+    const user = validateUser(req);
+    const wallet = await listPaymentMethods(user.uid);
+    res.send(wallet.data);
+  })
+);

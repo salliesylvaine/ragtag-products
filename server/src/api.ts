@@ -1,4 +1,10 @@
-import express, { request, Request, Response, NextFunction } from "express";
+import express, {
+  request,
+  Request,
+  Response,
+  NextFunction,
+  response,
+} from "express";
 //the app is the api (receives incoming requests
 //and sends outbound responses)
 export const app = express();
@@ -51,6 +57,11 @@ import { createPaymentIntent } from "./payments";
 import { handleStripeWebhook } from "./webhooks";
 import { auth } from "firebase-admin";
 import { createSetupIntent, listPaymentMethods } from "./customers";
+import {
+  cancelSubscription,
+  createSubscription,
+  listSubscriptions,
+} from "./billing";
 
 //Payment Intents API
 
@@ -119,5 +130,42 @@ app.get(
     const user = validateUser(req);
     const wallet = await listPaymentMethods(user.uid);
     res.send(wallet.data);
+  })
+);
+
+//Billing and Recurring Subscription
+
+//Create and charge new Subscription
+app.post(
+  "/subscriptions/",
+  runAsync(async (req: Request, res: Response) => {
+    const user = validateUser(req);
+    const { plan, payment_method } = req.body;
+    const subscription = await createSubscription(
+      user.id,
+      plan,
+      payment_method
+    );
+    res.send(subscription);
+  })
+);
+
+//Get all subscriptions for a customer
+app.get(
+  "/subscriptions/",
+  runAsync(async (req: Request, res: Response) => {
+    const user = validateUser(req);
+    const subscriptions = await listSubscriptions(user.uid);
+
+    res.send(subscriptions.data);
+  })
+);
+
+//Unsubscribe or cancel a subscription
+app.patch(
+  "/subscriptions/:id",
+  runAsync(async (req: Request, res: Response) => {
+    const user = validateUser(req);
+    res.send(await cancelSubscription(user.uid, req.params.id));
   })
 );

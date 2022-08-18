@@ -46,3 +46,41 @@ export async function createSubscription(
 
   return subscription;
 }
+
+//Cancels an active subscription, syncs the data in Firestore
+export async function cancelSubscription(
+  userId: string,
+  subscriptionId: string
+) {
+  const customer = await getOrCreateCustomer(userId);
+  //extra form of validation to ensure a user cant cancel another users plan
+  if (customer.metadata.firebaseUID !== userId) {
+    throw Error("Firebase UID does not match Stripe Customer");
+  }
+  //cancels subscription immediately
+  const subscription: any = await stripe.subscriptions.del(subscriptionId);
+
+  //Cancel at end of period
+  //if you go this route, need to create a webhook to the event of when the subscription
+  //is deleted, and update customer's record at that point
+  //const subscription = stripe.subscriptions.update(subscriptionId, {cancel_at_period_end: true})
+
+  if (subscription.status === "canceled") {
+    await db
+      .collection("users")
+      .doc(userId)
+      .update({
+        activePlans: firestore.FieldValue.arrayRemove(subscription.plan.id),
+      });
+  }
+  return subscription;
+}
+
+//Returns all the subscriptions linked to a firebase userID in Stripe
+export async function listSubscriptions(userId: string) {
+  const customer = await getOrCreateCustomer(userId);
+  const subscriptions = await stripe.subscriptions.list({
+    customer: customer.id,
+  });
+  return subscriptions;
+}

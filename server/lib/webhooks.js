@@ -24,7 +24,7 @@ const webhookHandlers = {
         const userId = customer.metadata.firebaseUID;
         const userRef = firebase_1.db.collection("users").doc(userId);
         await userRef.update({
-            activePlans: firebase_admin_1.firestore.FieldValue.arrayUnion(data.plan.id),
+            activePlans: firebase_admin_1.firestore.FieldValue.arrayUnion(data.id),
         });
     },
     "invoice.payment_succeeded": async (data) => {

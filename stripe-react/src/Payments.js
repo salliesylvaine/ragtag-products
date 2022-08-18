@@ -73,3 +73,34 @@ function Payments() {
     </>
   );
 }
+
+function PaymentIntentData(props) {
+  if (props.data) {
+    const { id, amount, status, client_secret } = props.data;
+    return (
+      <>
+        <h3>
+          Payment Intent{" "}
+          <span
+            className={
+              "badge " +
+              (status === "succeeded" ? "badge-success" : "badge-secondary")
+            }
+          >
+            {status}
+          </span>
+        </h3>
+        <pre>
+          ID: {id} <br />
+          Client Secret: {client_secret} <br />
+          Amount: {amount} <br />
+          Status:{status}
+          <br />
+        </pre>
+      </>
+    );
+  } else {
+    return <p>Payment Intent Not Created Yet</p>;
+  }
+}
+export default Payments;

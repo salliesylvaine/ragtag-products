@@ -166,3 +166,11 @@ function SubscribeToPlan(props) {
     </>
   );
 }
+
+export default function Subscriptions() {
+  return (
+    <Suspense fallback={"loading user"}>
+      <SubscribeToPlan />
+    </Suspense>
+  );
+}

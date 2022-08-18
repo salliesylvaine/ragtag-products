@@ -2,7 +2,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { fetchFromAPI } from "./helpers";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useUser, AuthCheck } from "reactfire";
-import firebase from "firebase/app";
+import firebase from "firebase/compat/app";
 import { auth, db } from "./firebase";
 
 function SaveCard(props) {
@@ -71,9 +71,9 @@ function SaveCard(props) {
         <div>
           <h3>Retrieve All Payment Sources</h3>
           <select>
-            {wallet.map((paymentSource) => {
-              <CreditCard key={paymentSource.id} card={paymentSource.card} />;
-            })}
+            {wallet.map((paymentSource) => (
+              <CreditCard key={paymentSource.id} card={paymentSource.card} />
+            ))}
           </select>
         </div>
 

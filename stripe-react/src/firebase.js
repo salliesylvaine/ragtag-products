@@ -1,8 +1,8 @@
 //alternative way to access db and auth sdks to use in front-end
 
-import firebase from "firebase/app";
-import "firebase/auth";
-import "firebase/firestore";
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
+import "firebase/compat/firestore";
 
 export const firebaseConfig = {
   apiKey: "AIzaSyBPGFsHysID6yKcLAZXNv3G2u558ynGb_c",

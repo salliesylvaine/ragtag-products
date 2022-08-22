@@ -1,8 +1,8 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { fetchFromAPI } from "./helpers";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { useUser, AuthCheck } from "reactfire";
-
+import { useUser, useSigninCheck } from "reactfire";
+import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "./firebase";
 import { SignIn, SignOut } from "./Customers";
 
@@ -12,10 +12,13 @@ function UserData(props) {
 
   //Subscribe to the user's data in Firestore
   useEffect(() => {
-    const unsubscribe = db
-      .collection("users")
-      .doc(props.user.uid)
-      .onSnapshot((doc) => setData(doc.data()));
+    const unsubscribe = onSnapshot(doc(db, "users", props.user.uid), (doc) =>
+      setData(doc.data())
+    );
+    // db
+    //   .collection("users")
+    //   .doc(props.user.uid)
+    //   .onSnapshot((doc) => setData(doc.data()));
     return () => unsubscribe();
   }, [props.user]);
 
@@ -31,6 +34,7 @@ function SubscribeToPlan(props) {
   const stripe = useStripe();
   const elements = useElements();
   const user = useUser();
+  const { data: signInCheckResult } = useSigninCheck();
 
   const [plan, setPlan] = useState();
   const [subscriptions, setSubscriptions] = useState([]);
@@ -39,7 +43,7 @@ function SubscribeToPlan(props) {
   //Get current subscriptions on mount
   useEffect(() => {
     getSubscriptions();
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   //Fetch current subscription from the API
   const getSubscriptions = async () => {
@@ -63,12 +67,12 @@ function SubscribeToPlan(props) {
     setLoading(true);
     event.preventDefault();
 
-    const CardElement = elements.getElement(CardElement);
+    const cardElement = elements.getElement(CardElement);
 
     //Create a Payment Method
     const { paymentMethod, error } = await stripe.createPaymentMethod({
       type: "card",
-      card: CardElement,
+      card: cardElement,
     });
 
     if (error) {
@@ -114,57 +118,99 @@ function SubscribeToPlan(props) {
     setPlan(null);
   };
 
-  return (
-    <>
-      <AuthCheck fallback={<SignIn />}>
-        <div>{user?.uid && <UserData user={user} />}</div>
+  if (signInCheckResult?.signedIn === true) {
+    return (
+      <>
+        <h2>Subscriptions</h2>
+        <p>
+          Subscribe a user to a recurring plan, process the payment, and sync
+          with Firestore in realtime.
+        </p>
+        <div className="well">
+          <h2>Firestore Data</h2>
+          <p>User's data in Firestore.</p>
+          {user?.uid && <UserData user={user} />}
+        </div>
 
         <hr />
 
-        <div>
+        <div className="well">
+          <h3>Step 1: Choose a Plan</h3>
           {/* hardcoding the plans since there's only two, in future might fetch from backend
     api if there are multiple plans or dynamic in any way */}
-          <button onClick={() => setPlan("price_1LXrDUBUToEIWzMZ5BVmkzpd")}>
+          <button
+            className={
+              "btn " +
+              (plan === "price_1LXrDUBUToEIWzMZ5BVmkzpd"
+                ? "btn-primary"
+                : "btn-outline-primary")
+            }
+            onClick={() => setPlan("price_1LXrDUBUToEIWzMZ5BVmkzpd")}
+          >
             Choose Monthly $25/m
           </button>
-          <button onClick={() => setPlan("price_1LXrFVBUToEIWzMZy7fIcIFm")}>
-            Choose Monthly $50/q
+          <button
+            className={
+              "btn " +
+              (plan === "price_1LXrFVBUToEIWzMZy7fIcIFm"
+                ? "btn-primary"
+                : "btn-outline-primary")
+            }
+            onClick={() => setPlan("price_1LXrFVBUToEIWzMZy7fIcIFm")}
+          >
+            Choose Quarterly $50/q
           </button>
 
           <p>
             Selected Plan: <strong>{plan}</strong>
           </p>
         </div>
+        <hr />
 
-        <form onSubmit={handleSubmit} hidden={!plan}>
+        <form className="well" onSubmit={handleSubmit} hidden={!plan}>
+          <h3>Step 2: Submit a Payment Method</h3>
+          <p>Collect credit card details</p>
+          <p>
+            Normal Card: <code>4242424242424242</code>
+          </p>
+          <p>
+            3D Secure Card: <code>4000002500003155</code>
+          </p>
+
+          <hr />
           <CardElement />
-          <button type="submit" disabled={loading}>
+          <button className="btn btn-success" type="submit" disabled={loading}>
             Subscribe and Pay
           </button>
         </form>
 
-        <h3>Manage Current Subscriptions</h3>
-        {subscriptions.map((sub) => (
-          <div key={sub.id}>
-            {sub.id}. Next payment of {sub.plan.amount} due{" "}
-            {new Date(sub.current_period_end * 1000).toUTCString()}
-            <button
-              onClick={() => {
-                cancel(sub.id);
-              }}
-              disabled={loading}
-            >
-              Cancel
-            </button>
+        <div className="well">
+          <h3>Manage Current Subscriptions</h3>
+          <div>
+            {subscriptions.map((sub) => (
+              <div key={sub.id}>
+                {sub.id}. Next payment of {sub.plan.amount} due{" "}
+                {new Date(sub.current_period_end * 1000).toUTCString()}
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={() => {
+                    cancel(sub.id);
+                  }}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
 
-        <div>
+        <div className="well">
           <SignOut user={user} />
         </div>
-      </AuthCheck>
-    </>
-  );
+      </>
+    );
+  } else return <SignIn />;
 }
 
 export default function Subscriptions() {

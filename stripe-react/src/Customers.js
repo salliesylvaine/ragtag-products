@@ -1,14 +1,45 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { fetchFromAPI } from "./helpers";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { useUser, AuthCheck } from "reactfire";
+import { useUser, useSigninCheck } from "reactfire";
 import firebase from "firebase/compat/app";
 import { auth, db } from "./firebase";
+
+//Sign In and Sign Out
+export function SignIn() {
+  const signIn = async () => {
+    //sign in with google using firebase
+    const credential = await auth.signInWithPopup(
+      new firebase.auth.GoogleAuthProvider()
+    );
+    const { uid, email } = credential.user;
+    db.collection("users").doc(uid).set({ email }, { merge: true });
+  };
+  return (
+    <button className="btn btn-primary" onClick={signIn}>
+      Sign In with Google
+    </button>
+  );
+}
+
+export function SignOut(props) {
+  return (
+    props.user && (
+      <button
+        className="btn btn-outline-secondary"
+        onClick={() => auth.signOut()}
+      >
+        Sign Out User {props.user.uid}
+      </button>
+    )
+  );
+}
 
 function SaveCard(props) {
   const stripe = useStripe();
   const elements = useElements();
   const user = useUser();
+  const { data: signInCheckResult } = useSigninCheck();
 
   const [setupIntent, setSetupIntent] = useState();
   const [wallet, setWallet] = useState([]);
@@ -53,36 +84,54 @@ function SaveCard(props) {
     }
   };
 
-  return (
-    <>
-      <AuthCheck fallback={<SignIn />}>
-        <div>
-          <button onClick={createSetupIntent} hidden={setupIntent}>
+  if (signInCheckResult?.signedIn === true) {
+    return (
+      <>
+        <h2>Customers</h2>
+
+        <p>Save credit card details for future use.</p>
+
+        {/* <AuthCheck fallback={<SignIn />}> */}
+        <div className="well">
+          <h3>Step 1: Create a Setup Intent</h3>
+          <button
+            className="btn btn-success"
+            onClick={createSetupIntent}
+            hidden={setupIntent}
+          >
             Attach New Credit Card
           </button>
         </div>
         <hr />
 
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={handleSubmit}
+          className="well"
+          hidden={!setupIntent || setupIntent.status === "succeeded"}
+        >
+          <h3>Step 2: Submit a Payment Method</h3>
           <CardElement />
-          <button type="submit">Attach</button>
+          <button className="btn btn-success" type="submit">
+            Attach
+          </button>
         </form>
 
-        <div>
+        <div className="well">
           <h3>Retrieve All Payment Sources</h3>
-          <select>
+          <select className="form-control">
             {wallet.map((paymentSource) => (
               <CreditCard key={paymentSource.id} card={paymentSource.card} />
             ))}
           </select>
         </div>
 
-        <div>
+        <div className="well">
           <SignOut user={user} />
         </div>
-      </AuthCheck>
-    </>
-  );
+        {/* </AuthCheck> */}
+      </>
+    );
+  } else return <SignIn />;
 }
 
 function CreditCard(props) {
@@ -91,29 +140,6 @@ function CreditCard(props) {
     <option>
       {brand} **** **** **** {last4} expires {exp_month}/{exp_year}
     </option>
-  );
-}
-
-//Sign In and Sign Out
-export function SignIn() {
-  const signIn = async () => {
-    //sign in with google using firebase
-    const credential = await auth.signInWithPopup(
-      new firebase.auth.GoogleAuthProvider()
-    );
-    const { uid, email } = credential.user;
-    db.collection("users").doc(uid).set({ email }, { merge: true });
-  };
-  return <button onClick={signIn}>Sign In with Google</button>;
-}
-
-export function SignOut(props) {
-  return (
-    props.user && (
-      <button onClick={() => auth.signOut()}>
-        Sign Out User {props.user.uid}
-      </button>
-    )
   );
 }
 

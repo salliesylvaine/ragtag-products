@@ -1,10 +1,5 @@
-import express, {
-  request,
-  Request,
-  Response,
-  NextFunction,
-  response,
-} from "express";
+import express, { Request, Response, NextFunction } from "express";
+
 //the app is the api (receives incoming requests
 //and sends outbound responses)
 export const app = express();

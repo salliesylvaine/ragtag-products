@@ -14,7 +14,12 @@ function App() {
         <nav>
           <ul className="navbar-nav">
             <li>
-              <Link to="/">Home</Link>
+              <Link to="/">
+                <span aria-label="emoji" role="img">
+                  🏡
+                </span>{" "}
+                Home
+              </Link>
             </li>
             <li>
               <Link to="/checkout">

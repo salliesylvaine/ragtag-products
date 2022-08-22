@@ -1,4 +1,6 @@
 import { auth } from "./firebase";
+
+//local host for DEV
 const API = "http://localhost:3333";
 
 //A helper function to fetch data from your API.
@@ -11,7 +13,7 @@ export async function fetchFromAPI(endpointURL, opts) {
 
   const res = await fetch(`${API}/${endpointURL}`, {
     method,
-    ...API(body && { body: JSON.stringify(body) }),
+    ...(body && { body: JSON.stringify(body) }),
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,

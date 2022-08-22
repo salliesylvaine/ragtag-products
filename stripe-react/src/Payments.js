@@ -49,26 +49,60 @@ function Payments() {
 
   return (
     <>
-      <div>
-        <input
-          type="number"
-          value={amount}
-          disabled={paymentIntent}
-          onChange={(e) => setAmount(e.target.value)}
-        />
-
-        <button
-          disabled={amount <= 0}
-          onClick={createPaymentIntent}
-          hidden={paymentIntent}
-        >
-          Ready to Pay ${(amount / 100).toFixed(2)}
-        </button>
+      <h2>Payments</h2>
+      <p>One-Time payment scenario. </p>
+      <div className="well">
+        <PaymentIntentData data={paymentIntent} />
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <div className="well">
+        <h3>Step 1: Create a Payment Intent</h3>
+        <p>
+          Change the amount of the payment in the form, then request a Payment
+          Intent to create context for one-time payment. Min 50, Max 9999999
+        </p>
+
+        <div className="form-inline">
+          <input
+            className="form-control mx-auto"
+            style={{ width: "170px" }}
+            type="number"
+            value={amount}
+            disabled={paymentIntent}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+
+          <button
+            className="btn btn-success"
+            disabled={amount <= 0}
+            onClick={createPaymentIntent}
+            hidden={paymentIntent}
+          >
+            Ready to Pay ${(amount / 100).toFixed(2)}
+          </button>
+        </div>
+      </div>
+      <hr />
+
+      <form
+        className="well"
+        onSubmit={handleSubmit}
+        hidden={!paymentIntent || paymentIntent.status === "succeeded"}
+      >
+        <h3>Step 2: Submit a Payment Method</h3>
+        <p>Collect credit card details, then submit the payment.</p>
+        <p>
+          Normal Card: <code>4242424242424242</code>
+        </p>
+        <p>
+          3D Secure Card: <code>4000002500003155</code>
+        </p>
+
+        <hr />
         <CardElement />
-        <button type="submit">Pay</button>
+        <button className="btn btn-success" type="submit">
+          Pay
+        </button>
       </form>
     </>
   );

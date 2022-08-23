@@ -8,22 +8,24 @@ import { firestore } from "firebase-admin";
 //Subscribes to a Stripe plan, and saves the plan to Firestore
 export async function createSubscription(
   userId: string,
-  plan: string,
+  price: string,
   payment_method: string
 ) {
   const customer = await getOrCreateCustomer(userId);
 
   //Attach the payment method to the customer
+  //Can be skipped if customer already attached one (returning user)
   await stripe.paymentMethods.attach(payment_method, { customer: customer.id });
 
   //Set it as the default payment method
+  //Not necessary if user already have a default payment method
   await stripe.customers.update(customer.id, {
     invoice_settings: { default_payment_method: payment_method },
   });
 
   const subscription = await stripe.subscriptions.create({
     customer: customer.id,
-    items: [{ plan }],
+    items: [{ price }],
     expand: ["latest_invoice.payment_intent"],
   });
 
@@ -38,7 +40,8 @@ export async function createSubscription(
       .set(
         {
           stripeCustomerId: customer.id,
-          activePlans: firestore.FieldValue.arrayUnion(plan),
+          //they can be subscribed to several plans potentially
+          activePlans: firestore.FieldValue.arrayUnion(price),
         },
         { merge: true }
       );
@@ -70,7 +73,9 @@ export async function cancelSubscription(
       .collection("users")
       .doc(userId)
       .update({
-        activePlans: firestore.FieldValue.arrayRemove(subscription.plan.id),
+        activePlans: firestore.FieldValue.arrayRemove(
+          subscription.items.data[0].price.id
+        ),
       });
   }
   return subscription;

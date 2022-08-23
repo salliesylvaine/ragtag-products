@@ -7,17 +7,19 @@ const customers_1 = require("./customers");
 const firebase_admin_1 = require("firebase-admin");
 //Attaches a payment method to the Stripe customer,
 //Subscribes to a Stripe plan, and saves the plan to Firestore
-async function createSubscription(userId, plan, payment_method) {
+async function createSubscription(userId, price, payment_method) {
     const customer = await customers_1.getOrCreateCustomer(userId);
     //Attach the payment method to the customer
+    //Can be skipped if customer already attached one (returning user)
     await _1.stripe.paymentMethods.attach(payment_method, { customer: customer.id });
     //Set it as the default payment method
+    //Not necessary if user already have a default payment method
     await _1.stripe.customers.update(customer.id, {
         invoice_settings: { default_payment_method: payment_method },
     });
     const subscription = await _1.stripe.subscriptions.create({
         customer: customer.id,
-        items: [{ plan }],
+        items: [{ price }],
         expand: ["latest_invoice.payment_intent"],
     });
     const invoice = subscription.latest_invoice;
@@ -29,7 +31,8 @@ async function createSubscription(userId, plan, payment_method) {
             .doc(userId)
             .set({
             stripeCustomerId: customer.id,
-            activePlans: firebase_admin_1.firestore.FieldValue.arrayUnion(plan),
+            //they can be subscribed to several plans potentially
+            activePlans: firebase_admin_1.firestore.FieldValue.arrayUnion(price),
         }, { merge: true });
     }
     return subscription;
@@ -53,7 +56,7 @@ async function cancelSubscription(userId, subscriptionId) {
             .collection("users")
             .doc(userId)
             .update({
-            activePlans: firebase_admin_1.firestore.FieldValue.arrayRemove(subscription.plan.id),
+            activePlans: firebase_admin_1.firestore.FieldValue.arrayRemove(subscription.items.data[0].price.id),
         });
     }
     return subscription;

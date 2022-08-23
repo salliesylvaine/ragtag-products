@@ -17,7 +17,7 @@ const webhookHandlers = {
         //add business logic here
     },
     "customer.subscription.deleted": async (data) => {
-        //Add your business logic here
+        //Add business logic here
     },
     "customer.subscription.created": async (data) => {
         const customer = (await _1.stripe.customers.retrieve(data.customer));
@@ -57,7 +57,7 @@ exports.handleStripeWebhook = async (req, res) => {
     }
     catch (err) {
         console.error(err);
-        res.status(400).send(`Webhook Error: ${err.message}`);
+        res.status(400).send(`Webhook Error: ${err}`);
     }
 };
 //# sourceMappingURL=webhooks.js.map

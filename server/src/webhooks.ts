@@ -17,7 +17,7 @@ const webhookHandlers = {
     //add business logic here
   },
   "customer.subscription.deleted": async (data: Stripe.Subscription) => {
-    //Add your business logic here
+    //Add business logic here
   },
   "customer.subscription.created": async (data: Stripe.Subscription) => {
     const customer = (await stripe.customers.retrieve(
@@ -68,6 +68,6 @@ export const handleStripeWebhook = async (req, res) => {
     res.send({ received: true });
   } catch (err) {
     console.error(err);
-    res.status(400).send(`Webhook Error: ${err.message}`);
+    res.status(400).send(`Webhook Error: ${err}`);
   }
 };

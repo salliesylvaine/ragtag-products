@@ -12,8 +12,8 @@ if (process.env.NODE_ENV !== "production") {
 //Initialize Stripe
 const stripe_1 = __importDefault(require("stripe"));
 exports.stripe = new stripe_1.default(process.env.STRIPE_SECRET, {
-    // @ts-ignore
-    apiVersion: "2020-03-02",
+    //@ts-ignore
+    apiVersion: "2022-08-01",
 });
 //Start the API with Express
 const api_1 = require("./api");

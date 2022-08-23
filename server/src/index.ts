@@ -8,8 +8,8 @@ if (process.env.NODE_ENV !== "production") {
 //Initialize Stripe
 import Stripe from "stripe";
 export const stripe = new Stripe(process.env.STRIPE_SECRET, {
-  // @ts-ignore
-  apiVersion: "2020-03-02",
+  //@ts-ignore
+  apiVersion: "2022-08-01",
 });
 
 //Start the API with Express

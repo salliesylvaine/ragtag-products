@@ -29,7 +29,7 @@ export async function getOrCreateCustomer(
   //retrieve the user's firestore document to see if a customer id exists there
   const userSnapshot = await db.collection("users").doc(userId).get();
 
-  const { stripeCustomerId, email } = userSnapshot.data();
+  const { stripeCustomerId, email } = userSnapshot.data() || {};
 
   //If missing customerID, create it
   if (!stripeCustomerId) {
